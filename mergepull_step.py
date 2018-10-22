@@ -3,6 +3,8 @@
 import os
 import re
 import urllib
+import urllib.parse
+import urllib.request
 import threading
 import subprocess
 from bs4 import BeautifulSoup
@@ -69,13 +71,17 @@ class GitCommander(object):
             return
 
         if not self.git_branch(_dir) == 'master':
+            print('--- checkout master on %s'%(_dir))
             self.command('git', '-C', _dir, 'checkout', 'master')
 
         if not 'upstream' in self.git_remotes(_dir):
             self.command('git', '-C', _dir, 'remote', 'add', 'upstream', upstream_url)
 
+        print('--- fetch upstream on [%s]'%(_dir))
         self.command('git', '-C', _dir, 'fetch', 'upstream')
+        print('--- merge upstream on [%s]'%(_dir))
         self.command('git', '-C', _dir, 'merge', 'upstream/master')
+        print('--- push on upstream on origin on [%s]'%(_dir))
         self.command('git', '-C', _dir, 'push', 'origin', 'master')
 
         print('%s synced from %s' % (_dir, upstream_url))
@@ -121,9 +127,10 @@ class GitCommander(object):
         page = geturl(origin_url)
         upstream_repo = self.extract_forked_repo(page)
         if not upstream_repo:
-            print('source repo : %s' % origin_url)
+            print('repo : %s [no upstream]' % origin_url)
             return None
         upstream_url = url_obj.scheme + '://' + url_obj.netloc + upstream_repo
+        print('repo : %s [%s]' % (origin_url, upstream_url))
         return upstream_url
 
 
